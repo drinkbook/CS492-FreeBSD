@@ -16,10 +16,7 @@
 
 using namespace std; 
 
-//These signals will eventually come from a .h file
-//44 is a test number, the number used in deployment will require review by an architect
 #define SIGTEST 44
-
 #define SIGSEVERE 45
 #define SIGMIN 46
 #define SIGPAGESNEEDED 47 
@@ -31,17 +28,15 @@ struct kevent event[1];
 
 
 
-//  Used to hold information about applications which have asked to be informed about low memory conditions
-
+/* Used to hold information about applications which have asked to be informed about low memory conditions */
 struct managed_application
 {
-	int pid, condition;
-	SLIST_ENTRY(managed_application) next_application;
+	int 		pid;
+	int 		condition;
+	SLIST_ENTRY(managed_application)	next_application;
 };
 
-
-//  This function handles the registration and deregistration of different applic   ations. It is called as part of the signal handling thread
-
+/* This function handles the registration and deregistration of different applic   ations. It is called as part of the signal handling thread */
 void monitor_application(int signal_number, siginfo_t *info, void *unused){
 	
 	struct managed_application *current_application = (managed_application*)malloc(sizeof(struct managed_application));
@@ -71,7 +66,7 @@ void monitor_application(int signal_number, siginfo_t *info, void *unused){
 }
 
 
-//    Sleeps for a random amount of milliseconds between min and max
+/* Sleeps for a random amount of milliseconds between min and max */
 void random_millisecond_sleep(int min, int max)
 {
 	struct timespec sleepFor;
@@ -82,7 +77,7 @@ void random_millisecond_sleep(int min, int max)
 }
 
 
-//	Sends SIGSTOP to all applications which are currently in our list of monitored applications
+/* Sends SIGSTOP to all applications which are currently in our list of monitored applications */
 void suspend_applications()
 {
 	struct managed_application *current_application = (managed_application*)malloc(sizeof(struct managed_application));
@@ -93,7 +88,7 @@ void suspend_applications()
 }
 
 
-//	Secnds SIGCONT to all applications currently in our list of monitored applications. Between each SIGCONT there is a random sleep between 0 and 1 seconds in order to avoid thundering herd issues.
+/* Secnds SIGCONT to all applications currently in our list of monitored applications. Between each SIGCONT there is a random sleep between 0 and 1 seconds in order to avoid thundering herd issues. */
 void resume_applications()
 {
 	struct managed_application *current_application = (managed_application*)malloc(sizeof(struct managed_application));
@@ -105,7 +100,7 @@ void resume_applications()
 }
 
 
-//Block waiting for registration or deregistration signals. This runs on a thread seperate from the main thread as the main thread will be blocking on the char device
+/* Block waiting for registration or deregistration signals. This runs on a thread seperate from the main thread as the main thread will be blocking on the char device */
 void *monitor_signals(void* unusedParam)
 {	
 	struct sigaction sig;
@@ -118,7 +113,7 @@ void *monitor_signals(void* unusedParam)
 		pause();
 }
 
-//Loops and blocks on the kqueue handled by our char device. On a low memory event we notify all registered applications interested in that event
+/* Loops and blocks on the kqueue handled by our char device. On a low memory event we notify all registered applications interested in that event */
 
 int main(int argc, char ** argv)
 {
@@ -126,8 +121,6 @@ int main(int argc, char ** argv)
 		printf("Args: %d\n", argc);
 		return -1;
 	}
-
-//	daemon(0,0);
 	
 	SLIST_INIT(&head);
 	struct managed_application *current_application = (managed_application*)malloc(sizeof(struct managed_application));
